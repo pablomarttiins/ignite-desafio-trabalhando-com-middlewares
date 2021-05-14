@@ -1,3 +1,4 @@
+//git remote rm origin
 const express = require('express');
 const cors = require('cors');
 
@@ -10,19 +11,69 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  const AlreadyExistsUser = users.find(user => user.username == username);
+
+  if(!AlreadyExistsUser){
+    return response.status(404).json({ error: "Usuário não encontrado"});
+  }
+
+  request.user = AlreadyExistsUser;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  if(!user.pro && user.todos.length == 10){
+    return response.status(403).json({error: "Usuário plano gratuito"});
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+  
+  const AlreadyExistsUser = users.find(user => user.username == username);
+
+  if(!AlreadyExistsUser){
+    return response.status(404).json({ error: "Usuário não encontrado!"});
+  }
+
+  const IsValid = validate(id);
+
+  if(!IsValid){
+    return response.status(400).json({ error: "ID Não é valido"});
+  }
+    
+  const AlreadyIdTodo = AlreadyExistsUser.todos.find(todo => todo.id == id);
+  
+  if(!AlreadyIdTodo){
+    return response.status(404).json({ error: "Todo não encontrado!"});
+  }
+
+  request.user = AlreadyExistsUser;
+  request.todo = AlreadyIdTodo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const User = users.find(user => user.id == id);
+
+  if(!User){
+    return response.status(404).json({ error: "Usuário não encontrado!"});
+  }
+
+  request.user = User;
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
